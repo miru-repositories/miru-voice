@@ -74,7 +74,7 @@ class TextInjector:
             if self._restore:
                 try:
                     saved = win32clipboard.GetClipboardData(win32con.CF_UNICODETEXT)
-                except TypeError:
+                except Exception:
                     saved = None
             win32clipboard.EmptyClipboard()
             win32clipboard.SetClipboardData(win32con.CF_UNICODETEXT, text)
@@ -87,7 +87,9 @@ class TextInjector:
             _key(VK_V, up=True),
             _key(VK_CONTROL, up=True),
         )
-        SendInput(4, ctypes.byref(inputs), ctypes.sizeof(INPUT))
+        sent = SendInput(4, ctypes.byref(inputs), ctypes.sizeof(INPUT))
+        if sent != 4:
+            raise OSError(f"SendInput delivered {sent}/4 events")
 
         if self._restore and saved is not None:
             time.sleep(0.1)
