@@ -40,6 +40,7 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+markers = ["slow: requires GPU and downloaded models"]
 
 [tool.ruff]
 line-length = 100
