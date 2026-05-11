@@ -32,23 +32,32 @@ class HotkeyListener:
         self._is_active = False  # for toggle mode
         self._listener: keyboard.Listener | None = None
 
+    def _fire(self, event: HotkeyEvent) -> None:
+        try:
+            self._on_event(event)
+        except Exception:
+            # Never let user callback exceptions kill the pynput listener thread.
+            pass
+
     def _handle_press(self, key) -> None:
         if key != self._target_key:
             return
         if self._mode == "hold":
-            self._on_event(HotkeyEvent.PRESS)
+            self._fire(HotkeyEvent.PRESS)
         else:  # toggle
             self._is_active = not self._is_active
-            self._on_event(HotkeyEvent.PRESS if self._is_active else HotkeyEvent.RELEASE)
+            self._fire(HotkeyEvent.PRESS if self._is_active else HotkeyEvent.RELEASE)
 
     def _handle_release(self, key) -> None:
         if key != self._target_key:
             return
         if self._mode == "hold":
-            self._on_event(HotkeyEvent.RELEASE)
+            self._fire(HotkeyEvent.RELEASE)
         # toggle mode ignores releases
 
     def start(self) -> None:
+        if self._listener is not None:
+            raise RuntimeError("HotkeyListener already started")
         self._listener = keyboard.Listener(
             on_press=self._handle_press,
             on_release=self._handle_release,
