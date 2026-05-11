@@ -2,6 +2,9 @@ from __future__ import annotations
 import asyncio
 import numpy as np
 import sounddevice as sd
+import logging
+
+_log = logging.getLogger(__name__)
 
 
 class AudioCapture:
@@ -18,10 +21,14 @@ class AudioCapture:
         if self._loop is None:
             return
         chunk = indata[:, 0].copy()  # mono
-        try:
-            self._loop.call_soon_threadsafe(self._queue.put_nowait, chunk)
-        except asyncio.QueueFull:
-            pass  # drop frame if downstream is too slow
+
+        def _enqueue():
+            try:
+                self._queue.put_nowait(chunk)
+            except asyncio.QueueFull:
+                _log.debug("audio frame dropped — consumer too slow")
+
+        self._loop.call_soon_threadsafe(_enqueue)
 
     async def stream(self, duration: float | None = None):
         """Async generator yielding audio chunks. If duration is None, runs until cancelled."""
