@@ -8,7 +8,7 @@ class ASR:
 
     def __init__(
         self,
-        model: str = "Systran/faster-distil-whisper-large-v3",
+        model: str = "Systran/faster-whisper-large-v3",
         compute_type: str = "int8",
         device: str = "cuda",
         device_index: int = 0,
