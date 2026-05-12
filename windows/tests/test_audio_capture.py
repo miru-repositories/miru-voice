@@ -1,4 +1,3 @@
-import asyncio
 import numpy as np
 import pytest
 from miru_voice.audio_capture import AudioCapture
