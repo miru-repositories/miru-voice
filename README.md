@@ -1,62 +1,134 @@
 # Dictado
 
-Local push-to-talk dictation app inspired by [Wispr Flow](https://wisprflow.ai/), but runs 100% on your machine — no cloud, no recurring cost, audio never leaves your device.
+Local push-to-talk dictation app inspired by [Wispr Flow](https://wisprflow.ai/), running 100% on your machine — no cloud, no recurring cost, audio never leaves your device.
 
-Hold a hotkey, speak, release. Text pastes into whatever app is focused.
+Hold a hotkey, speak, release. Text gets pasted into whatever app is focused.
 
-## Repository layout
+---
 
-This repo contains two separate implementations — one per platform — because the audio capture, text injection, and ASR backends differ enough that a single codebase would be more friction than benefit.
+## What you need (per OS)
 
-```
-dictado/
-├── windows/   →  Windows version (NVIDIA CUDA, faster-whisper GPU)
-├── macos/     →  macOS version (Apple Silicon, faster-whisper CPU)
-└── docs/      →  Design specs and implementation plans (shared)
-```
+### Windows
 
-Each subfolder is a self-contained Python project with its own `pyproject.toml`, `src/`, `tests/`, and `README.md`. Pick the one for your OS.
+| What | Minimum | Why |
+|---|---|---|
+| OS | Windows 10 (1909+) / 11 | tested on Win 11 |
+| GPU | NVIDIA, **≥8 GB VRAM** | runs Whisper-large-v3 in CUDA int8 |
+| Driver | NVIDIA 525+ (CUDA 12.x) | required for ctranslate2 GPU |
+| Python | 3.11+ | tested on 3.12 |
+| Free disk | ~5 GB | venv + Whisper model |
+| Mic | any working input | dictation input |
+| Extra setup | copy cuBLAS DLLs into venv | one-line workaround, in [`windows/README.md`](windows/README.md) |
+
+**No NVIDIA GPU?** Skip — CTranslate2 only supports CUDA on Windows. CPU is too slow on Windows hardware.
+
+### macOS
+
+| What | Minimum | Why |
+|---|---|---|
+| OS | macOS 12 Monterey | tested target macOS 14+ |
+| Architecture | x86_64 (Intel) | works but slow — prefer Apple Silicon |
+| | **arm64 (Apple Silicon M1+)** | runs Whisper-large-v3 in CPU int8 with usable latency |
+| Python | 3.11+ | `brew install python@3.12` |
+| Free disk | ~3 GB | venv + Whisper model |
+| Mic | any working input | dictation input |
+| Permissions | grant **Accessibility** to your Python binary | required for global hotkey + paste simulation |
+
+ASR runs CPU-only on macOS (CTranslate2 has no Metal backend). On Apple Silicon CPU it's still fast enough; on Intel Macs you'll want to swap to a smaller Whisper model — see the platform README.
+
+---
 
 ## Quick start
 
-**Windows (NVIDIA GPU required):**
+Pick your OS folder. Each is a self-contained Python project.
+
+### Windows
+
 ```powershell
 cd windows
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
+pip install --upgrade pip
 pip install -e ".[dev]"
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+pip install nvidia-cublas-cu12
+# copy cuBLAS DLLs (one-time):
+Copy-Item ".\.venv\Lib\site-packages\nvidia\cublas\bin\cublas64_12.dll", `
+          ".\.venv\Lib\site-packages\nvidia\cublas\bin\cublasLt64_12.dll" `
+          ".\.venv\Lib\site-packages\ctranslate2\"
 python -m dictado.main
 ```
 
-**macOS (Apple Silicon recommended):**
+Then hold **Left Ctrl + Space**, speak, release.
+
+### macOS
+
 ```bash
 cd macos
 python3 -m venv .venv
 source .venv/bin/activate
+pip install --upgrade pip
 pip install -e ".[dev]"
+# grant Accessibility permission to .venv/bin/python3.x — see macos/README.md
 python -m dictado.main
 ```
 
-See [`windows/README.md`](windows/README.md) or [`macos/README.md`](macos/README.md) for the full setup including CUDA workaround (Windows) and Accessibility permission (macOS).
+Then hold **Right Option (⌥)**, speak, release.
+
+---
+
+## How to customize
+
+Both versions expose the same knobs. Per-OS details are in [`windows/README.md`](windows/README.md#modify-it) and [`macos/README.md`](macos/README.md#modify-it). Quick reference:
+
+| What | Where | How |
+|---|---|---|
+| Change hotkey | `src/dictado/main.py` | swap `keys=...` arg of `HotkeyListener` |
+| Change Whisper model | `src/dictado/asr.py` | edit `model` default; supports large-v3, large-v3-turbo, medium, small, base |
+| Force a language | `src/dictado/main.py` | pass `"es"` or `"en"` as 2nd arg of `self._asr.transcribe` |
+| Force paste vs typing | `src/dictado/main.py` | `TextInjector(mode="paste" | "type" | "auto")` |
+| Silence threshold | `src/dictado/main.py` | `if rms < 0.005:` — lower if your mic is quiet |
+| Hotkey behavior | `src/dictado/main.py` | `mode="hold"` (default) or `mode="toggle"` |
+
+---
+
+## Repository layout
+
+```
+dictado/
+├── windows/   →  Windows version (NVIDIA CUDA, faster-whisper GPU, pywin32 paste)
+├── macos/     →  macOS version (Apple Silicon, faster-whisper CPU, pyperclip paste)
+└── docs/      →  Design specs and implementation plans (shared)
+```
+
+The two versions are deliberately **not** a single codebase with platform detection — keeping them separate means each can adopt platform-native optimizations (CUDA vs MLX, Win32 SendInput vs Cmd+V, WASAPI vs CoreAudio) without `if sys.platform` ladders. They share design documents in `docs/`.
+
+---
 
 ## Status
 
-- **Windows**: Phase 1 MVP working end-to-end (hotkey + ASR + paste). Validated on RTX 3080.
-- **macOS**: Phase 1 port done, not yet validated on hardware. Targets Apple Silicon.
+- **Windows** — Phase 1 MVP working end-to-end. Validated on RTX 3080 + Logitech C920.
+- **macOS** — Phase 1 port written but **not yet validated on hardware**.
 
-Phases 2-4 (VAD, LLM postprocess, packaging) not yet implemented on either side. See `docs/superpowers/plans/` for the full roadmap.
+Phases 2-4 not yet started on either side:
+- Phase 2 — silero-vad for automatic end-of-speech, regex filler removal, system tray icon with state
+- Phase 3 — Phi-3-mini LLM grammar correction, voice commands (`"nueva línea"`, `"coma"`), per-app behavior rules
+- Phase 4 — `.exe` / `.app` bundle, config file in `%APPDATA%` / `~/Library`, rotating logs
 
-## Design
+Full plan in [`docs/superpowers/plans/2026-05-11-dictado-local-app.md`](docs/superpowers/plans/2026-05-11-dictado-local-app.md).
 
-The full architectural design and decision log lives in `docs/superpowers/specs/2026-05-11-dictado-local-design.md`. The implementation plan with task-by-task breakdown is in `docs/superpowers/plans/2026-05-11-dictado-local-app.md`.
+---
 
-Core stack on both platforms:
-- `sounddevice` for audio capture
-- `faster-whisper` (CTranslate2 backend) for ASR
-- `pynput` for global hotkey + (on macOS) keystroke simulation
-- `silero-vad` (Phase 2) for end-of-speech detection
-- `llama-cpp-python` + Phi-3-mini Q4 (Phase 3) for grammar/filler correction
+## Stack
 
-Platform-specific:
-- **Windows**: pywin32 + ctypes SendInput for clipboard + Ctrl+V; CUDA for ASR
-- **macOS**: pyperclip + pynput Cmd+V; CPU for ASR (Metal not supported by CTranslate2 — swap to whisper.cpp or mlx-whisper for GPU)
+| Layer | Library | Notes |
+|---|---|---|
+| Audio capture | `sounddevice` | WASAPI exclusive (Win) / CoreAudio (Mac) |
+| ASR | `faster-whisper` (CTranslate2) | int8 on CUDA (Win) / int8 on CPU (Mac) |
+| Hotkey | `pynput` | global listener, supports single keys + combos |
+| Paste | `pywin32` + ctypes SendInput (Win); `pyperclip` + pynput Cmd+V (Mac) | |
+| VAD (Phase 2) | `silero-vad` | runs on CPU, ~5 ms per chunk |
+| LLM (Phase 3) | `llama-cpp-python` + Phi-3-mini Q4 | CUDA on Win, Metal on Mac |
+| Tray (Phase 2) | `pystray` + Pillow | cross-platform |
+
+See the platform READMEs for the full troubleshooting + tuning playbooks.
