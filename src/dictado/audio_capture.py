@@ -30,24 +30,29 @@ class AudioCapture:
 
         self._loop.call_soon_threadsafe(_enqueue)
 
-    async def stream(self, duration: float | None = None):
-        """Async generator yielding audio chunks. If duration is None, runs until cancelled."""
-        self._loop = asyncio.get_running_loop()
-        extra = None
-        try:
-            extra = sd.WasapiSettings(exclusive=True)
-        except Exception:
-            pass
-
-        with sd.InputStream(
+    def _open_stream(self):
+        common = dict(
             samplerate=self.samplerate,
             blocksize=self.blocksize,
             channels=1,
             dtype="float32",
             device=self.device,
             callback=self._callback,
-            extra_settings=extra,
-        ):
+        )
+        # Prefer WASAPI exclusive for low latency. Falls back if the default
+        # device's host API is incompatible (e.g., MME/DirectSound) or if the
+        # device is already in exclusive use by another process.
+        try:
+            return sd.InputStream(**common, extra_settings=sd.WasapiSettings(exclusive=True))
+        except Exception as e:
+            _log.info("WASAPI exclusive unavailable (%s); using default host API", e)
+            return sd.InputStream(**common)
+
+    async def stream(self, duration: float | None = None):
+        """Async generator yielding audio chunks. If duration is None, runs until cancelled."""
+        self._loop = asyncio.get_running_loop()
+
+        with self._open_stream():
             if duration is None:
                 while True:
                     yield await self._queue.get()
