@@ -77,9 +77,11 @@ class App:
             level=logging.INFO,
             format="%(asctime)s %(levelname)s %(message)s",
         )
-        listener = HotkeyListener(key="alt_r", mode="hold", on_event=self._on_hotkey)
+        listener = HotkeyListener(
+            keys=["ctrl_l", "space"], mode="hold", on_event=self._on_hotkey
+        )
         listener.start()
-        log.info("ready — hold Right Alt to dictate. Ctrl+C to quit.")
+        log.info("ready — hold Left Ctrl + Space to dictate. Ctrl+C to quit.")
         try:
             self._loop.run_forever()
         except KeyboardInterrupt:
