@@ -1,5 +1,9 @@
 # Miru Voice
 
+[![CI](https://github.com/miru-repositories/miru-voice/actions/workflows/ci.yml/badge.svg)](https://github.com/miru-repositories/miru-voice/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+
 Local push-to-talk dictation app inspired by [Wispr Flow](https://wisprflow.ai/), running 100% on your machine — no cloud, no recurring cost, audio never leaves your device.
 
 Hold a hotkey, speak, release. Text gets pasted into whatever app is focused.
@@ -132,3 +136,15 @@ Full plan in [`docs/superpowers/plans/2026-05-11-dictado-local-app.md`](docs/sup
 | Tray (Phase 2) | `pystray` + Pillow | cross-platform |
 
 See the platform READMEs for the full troubleshooting + tuning playbooks.
+
+---
+
+## Contributing
+
+PRs welcome. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for dev setup, commit conventions, and the PR process. Bug reports and feature requests use the templates under `.github/ISSUE_TEMPLATE/`. By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+Security issues: see [`SECURITY.md`](SECURITY.md) — please use GitHub's private vulnerability reporting, not public issues.
+
+## License
+
+MIT — see [`LICENSE`](LICENSE). Copyright © 2026 Miru.
