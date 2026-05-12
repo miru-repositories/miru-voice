@@ -1,11 +1,11 @@
 from unittest.mock import patch
-from dictado.injector import TextInjector
+from miru_voice.injector import TextInjector
 
 
 def test_inject_uses_clipboard_then_paste():
     inj = TextInjector(mode="paste")
-    with patch("dictado.injector.win32clipboard") as cb, \
-         patch("dictado.injector.SendInput", return_value=4) as send:
+    with patch("miru_voice.injector.win32clipboard") as cb, \
+         patch("miru_voice.injector.SendInput", return_value=4) as send:
         cb.GetClipboardData.return_value = "previous"
         inj.inject("hola mundo")
 

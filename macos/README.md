@@ -1,4 +1,4 @@
-# Dictado — macOS
+# Miru Voice — macOS
 
 Local push-to-talk dictation. Hold a hotkey, speak, release. Text gets pasted via Cmd+V into the focused app. 100% on-device — audio never leaves your Mac.
 
@@ -66,16 +66,16 @@ Steps:
 1. Open **System Settings → Privacy & Security → Accessibility**
 2. Click the **+** button
 3. Navigate to your venv's Python and add it:
-   `/path/to/your/dictado/macos/.venv/bin/python3.12`
+   `/path/to/your/miru-voice/macos/.venv/bin/python3.12`
 4. Toggle the new entry **ON**
 
-Alternative: instead of adding the Python binary, add the **Terminal** app (or **iTerm**, **VS Code**, whatever you launch `python -m dictado.main` from). Easier but coarser (gives any tool you run that permission).
+Alternative: instead of adding the Python binary, add the **Terminal** app (or **iTerm**, **VS Code**, whatever you launch `python -m miru_voice.main` from). Easier but coarser (gives any tool you run that permission).
 
 After granting permission, you may need to **quit and reopen** Terminal for it to take effect.
 
 ### 5. Microphone permission
 
-The first time you run dictado, macOS will ask for microphone access. Click **OK**. If you accidentally clicked "Don't Allow", re-enable in **System Settings → Privacy & Security → Microphone**.
+The first time you run miru-voice, macOS will ask for microphone access. Click **OK**. If you accidentally clicked "Don't Allow", re-enable in **System Settings → Privacy & Security → Microphone**.
 
 ### 6. First run downloads the Whisper model
 
@@ -93,7 +93,7 @@ Cached at `~/.cache/huggingface/`. Takes 2-5 minutes depending on network.
 
 ```bash
 source .venv/bin/activate
-python -m dictado.main
+python -m miru_voice.main
 ```
 
 You'll see:
@@ -119,14 +119,14 @@ You'll see:
 There's no `.app` bundle yet (Phase 4 work), but you can create a simple alias:
 
 ```bash
-# Save this as a shell script and drop it into /Applications/Dictado.command
+# Save this as a shell script and drop it into /Applications/Miru Voice.command
 #!/usr/bin/env bash
-cd "/path/to/your/dictado/macos"
+cd "/path/to/your/miru-voice/macos"
 source .venv/bin/activate
-python -m dictado.main
+python -m miru_voice.main
 ```
 
-Then `chmod +x Dictado.command` and drag onto the Dock. Clicking it opens Terminal and starts dictado. Not pretty, but works.
+Then `chmod +x Miru Voice.command` and drag onto the Dock. Clicking it opens Terminal and starts miru-voice. Not pretty, but works.
 
 For a real `.app` bundle, see [Phase 4 status](#status).
 
@@ -134,11 +134,11 @@ For a real `.app` bundle, see [Phase 4 status](#status).
 
 ## Modify it
 
-All defaults live in `src/dictado/main.py` and the submodules. No config file yet (Phase 4). Edit the source and re-run.
+All defaults live in `src/miru_voice/main.py` and the submodules. No config file yet (Phase 4). Edit the source and re-run.
 
 ### Change the hotkey
 
-In `src/dictado/main.py`, find:
+In `src/miru_voice/main.py`, find:
 
 ```python
 listener = HotkeyListener(keys="alt_r", mode="hold", on_event=self._on_hotkey)
@@ -155,7 +155,7 @@ Replace `keys=...` with one of:
 | Ctrl + Space | `keys=["ctrl_l", "space"]` | **Conflicts with IME switcher** if you have multiple input sources |
 | Cmd + Shift + D | `keys=["cmd_l", "shift_l", "d"]` | Letter keys not yet in map — add to `_KEY_MAP` first |
 
-Available single keys: `alt_l`, `alt_r`, `ctrl_l`, `ctrl_r`, `cmd_l`, `cmd_r`, `shift_l`, `shift_r`, `space`, `caps_lock`, `f12`, `f13`, `f14`. Full list in `src/dictado/hotkey.py:_KEY_MAP`.
+Available single keys: `alt_l`, `alt_r`, `ctrl_l`, `ctrl_r`, `cmd_l`, `cmd_r`, `shift_l`, `shift_r`, `space`, `caps_lock`, `f12`, `f13`, `f14`. Full list in `src/miru_voice/hotkey.py:_KEY_MAP`.
 
 **Avoid these combos** (system-reserved on macOS):
 - `["cmd_l", "space"]` — Spotlight
@@ -180,7 +180,7 @@ Default `Systran/faster-whisper-large-v3` (multilingual, ~800 MB) is the best qu
 | `Systran/faster-whisper-base` | 145 MB | ~50-100 ms | ~200 ms | Acceptable for testing, lower quality. |
 | `Systran/faster-distil-whisper-large-v3` | 750 MB | — | — | **English ONLY** — don't use if you need Spanish. |
 
-Edit the default in `src/dictado/asr.py`:
+Edit the default in `src/miru_voice/asr.py`:
 
 ```python
 def __init__(
@@ -205,7 +205,7 @@ CTranslate2 (what faster-whisper uses) has no Metal backend on macOS, so ASR is 
 ```bash
 pip install mlx-whisper
 ```
-Then replace `src/dictado/asr.py` to call `mlx_whisper.transcribe(...)` instead. Expected ~2-3x speedup over faster-whisper CPU on M1+.
+Then replace `src/miru_voice/asr.py` to call `mlx_whisper.transcribe(...)` instead. Expected ~2-3x speedup over faster-whisper CPU on M1+.
 
 **`whisper.cpp`** (mature C++ with Metal):
 ```bash
@@ -217,7 +217,7 @@ Both are beyond Phase 1 scope — flagged here for future tuning.
 
 ### Force a language (skip auto-detect)
 
-Auto-detect occasionally picks wrong on short utterances. In `src/dictado/main.py`:
+Auto-detect occasionally picks wrong on short utterances. In `src/miru_voice/main.py`:
 
 ```python
 text = await asyncio.to_thread(self._asr.transcribe, audio, "es")   # or "en"
@@ -227,7 +227,7 @@ text = await asyncio.to_thread(self._asr.transcribe, audio, "es")   # or "en"
 
 ### Change paste behavior
 
-In `src/dictado/main.py`, `self._injector = TextInjector()` defaults to `mode="auto"` (paste, fallback to typing on error). Force one:
+In `src/miru_voice/main.py`, `self._injector = TextInjector()` defaults to `mode="auto"` (paste, fallback to typing on error). Force one:
 
 ```python
 self._injector = TextInjector(mode="paste")   # paste only — raise on failure
@@ -238,7 +238,7 @@ self._injector = TextInjector(mode="type")    # always type character-by-charact
 
 ### Change the silence threshold
 
-In `src/dictado/main.py`, the orchestrator skips audio with RMS < 0.005. If your mic is quiet:
+In `src/miru_voice/main.py`, the orchestrator skips audio with RMS < 0.005. If your mic is quiet:
 
 ```python
 if rms < 0.001:   # was 0.005
@@ -248,7 +248,7 @@ if rms < 0.001:   # was 0.005
 
 ### Where are the logs
 
-Console output only — the Terminal where you ran `python -m dictado.main`. Phase 4 will add a rotating log at `~/Library/Logs/dictado/dictado.log`.
+Console output only — the Terminal where you ran `python -m miru_voice.main`. Phase 4 will add a rotating log at `~/Library/Logs/miru-voice/miru-voice.log`.
 
 ---
 
@@ -268,7 +268,7 @@ python -c "import sounddevice as sd; print(sd.query_devices())"
 
 Find your mic in the list and set its index in `AudioCapture(device=N)` if not default.
 
-**App pastes English when you spoke Spanish** → Wrong model. Verify `src/dictado/asr.py` uses `Systran/faster-whisper-large-v3` (or any non-distil variant). `distil-whisper-large-v3` is English-only.
+**App pastes English when you spoke Spanish** → Wrong model. Verify `src/miru_voice/asr.py` uses `Systran/faster-whisper-large-v3` (or any non-distil variant). `distil-whisper-large-v3` is English-only.
 
 **`pyperclip.PyperclipException`** → On macOS this means `pbcopy`/`pbpaste` aren't accessible (very rare, usually a corrupted PATH). Reset shell PATH or specify full path in pyperclip config.
 

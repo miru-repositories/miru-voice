@@ -1,12 +1,12 @@
 from unittest.mock import patch, MagicMock
-from dictado.injector import TextInjector
+from miru_voice.injector import TextInjector
 
 
 def test_inject_uses_clipboard_then_paste():
     """Paste mode: copies to clipboard, simulates Cmd+V via pynput, restores prior clipboard."""
     inj = TextInjector(mode="paste")
 
-    with patch("dictado.injector.pyperclip") as cb:
+    with patch("miru_voice.injector.pyperclip") as cb:
         cb.paste.return_value = "previous"
 
         # Capture the keyboard controller's pressed-context calls
@@ -27,7 +27,7 @@ def test_inject_uses_clipboard_then_paste():
 
 def test_inject_empty_string_noop():
     inj = TextInjector(mode="paste")
-    with patch("dictado.injector.pyperclip") as cb:
+    with patch("miru_voice.injector.pyperclip") as cb:
         inj.inject("")
         cb.copy.assert_not_called()
 
@@ -35,7 +35,7 @@ def test_inject_empty_string_noop():
 def test_type_mode_skips_clipboard():
     inj = TextInjector(mode="type")
     inj._kb = MagicMock()
-    with patch("dictado.injector.pyperclip") as cb:
+    with patch("miru_voice.injector.pyperclip") as cb:
         inj.inject("hola")
         cb.copy.assert_not_called()
         inj._kb.type.assert_called_once_with("hola")

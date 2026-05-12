@@ -4,7 +4,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from dictado.asr import ASR
+from miru_voice.asr import ASR
 
 
 _asr_model_ref: ASR | None = None  # global ref prevents GC during teardown

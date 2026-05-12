@@ -1,4 +1,4 @@
-# Dictado
+# Miru Voice
 
 Local push-to-talk dictation app inspired by [Wispr Flow](https://wisprflow.ai/), running 100% on your machine — no cloud, no recurring cost, audio never leaves your device.
 
@@ -56,7 +56,7 @@ pip install nvidia-cublas-cu12
 Copy-Item ".\.venv\Lib\site-packages\nvidia\cublas\bin\cublas64_12.dll", `
           ".\.venv\Lib\site-packages\nvidia\cublas\bin\cublasLt64_12.dll" `
           ".\.venv\Lib\site-packages\ctranslate2\"
-python -m dictado.main
+python -m miru_voice.main
 ```
 
 Then hold **Left Ctrl + Space**, speak, release.
@@ -70,7 +70,7 @@ source .venv/bin/activate
 pip install --upgrade pip
 pip install -e ".[dev]"
 # grant Accessibility permission to .venv/bin/python3.x — see macos/README.md
-python -m dictado.main
+python -m miru_voice.main
 ```
 
 Then hold **Right Option (⌥)**, speak, release.
@@ -83,19 +83,19 @@ Both versions expose the same knobs. Per-OS details are in [`windows/README.md`]
 
 | What | Where | How |
 |---|---|---|
-| Change hotkey | `src/dictado/main.py` | swap `keys=...` arg of `HotkeyListener` |
-| Change Whisper model | `src/dictado/asr.py` | edit `model` default; supports large-v3, large-v3-turbo, medium, small, base |
-| Force a language | `src/dictado/main.py` | pass `"es"` or `"en"` as 2nd arg of `self._asr.transcribe` |
-| Force paste vs typing | `src/dictado/main.py` | `TextInjector(mode="paste" | "type" | "auto")` |
-| Silence threshold | `src/dictado/main.py` | `if rms < 0.005:` — lower if your mic is quiet |
-| Hotkey behavior | `src/dictado/main.py` | `mode="hold"` (default) or `mode="toggle"` |
+| Change hotkey | `src/miru_voice/main.py` | swap `keys=...` arg of `HotkeyListener` |
+| Change Whisper model | `src/miru_voice/asr.py` | edit `model` default; supports large-v3, large-v3-turbo, medium, small, base |
+| Force a language | `src/miru_voice/main.py` | pass `"es"` or `"en"` as 2nd arg of `self._asr.transcribe` |
+| Force paste vs typing | `src/miru_voice/main.py` | `TextInjector(mode="paste" | "type" | "auto")` |
+| Silence threshold | `src/miru_voice/main.py` | `if rms < 0.005:` — lower if your mic is quiet |
+| Hotkey behavior | `src/miru_voice/main.py` | `mode="hold"` (default) or `mode="toggle"` |
 
 ---
 
 ## Repository layout
 
 ```
-dictado/
+miru-voice/
 ├── windows/   →  Windows version (NVIDIA CUDA, faster-whisper GPU, pywin32 paste)
 ├── macos/     →  macOS version (Apple Silicon, faster-whisper CPU, pyperclip paste)
 └── docs/      →  Design specs and implementation plans (shared)
@@ -115,7 +115,7 @@ Phases 2-4 not yet started on either side:
 - Phase 3 — Phi-3-mini LLM grammar correction, voice commands (`"nueva línea"`, `"coma"`), per-app behavior rules
 - Phase 4 — `.exe` / `.app` bundle, config file in `%APPDATA%` / `~/Library`, rotating logs
 
-Full plan in [`docs/superpowers/plans/2026-05-11-dictado-local-app.md`](docs/superpowers/plans/2026-05-11-dictado-local-app.md).
+Full plan in [`docs/superpowers/plans/2026-05-11-dictado-local-app.md`](docs/superpowers/plans/2026-05-11-dictado-local-app.md) (kept under its original filename — historical record of when the project was called "dictado").
 
 ---
 

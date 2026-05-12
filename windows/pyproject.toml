@@ -1,7 +1,7 @@
 [project]
-name = "dictado"
+name = "miru-voice"
 version = "0.1.0"
-description = "Local push-to-talk dictation for Windows (RTX 3080)"
+description = "Miru Voice — local push-to-talk dictation for Windows (RTX 3080)"
 requires-python = ">=3.11"
 dependencies = [
     "sounddevice>=0.4.6",
@@ -28,7 +28,7 @@ llm = [
 ]
 
 [project.scripts]
-dictado = "dictado.main:run"
+miru-voice = "miru_voice.main:run"
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]

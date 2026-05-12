@@ -1,5 +1,5 @@
 import pytest
-from dictado.hotkey import HotkeyListener, HotkeyEvent
+from miru_voice.hotkey import HotkeyListener, HotkeyEvent
 
 
 def _first(s):

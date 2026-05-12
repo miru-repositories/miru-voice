@@ -1,7 +1,7 @@
 import asyncio
 import numpy as np
 import pytest
-from dictado.audio_capture import AudioCapture
+from miru_voice.audio_capture import AudioCapture
 
 
 @pytest.mark.asyncio
@@ -21,7 +21,7 @@ async def test_capture_yields_chunks(mocker):
         def __exit__(self, *a):
             pass
 
-    mocker.patch("dictado.audio_capture.sd.InputStream", FakeStream)
+    mocker.patch("miru_voice.audio_capture.sd.InputStream", FakeStream)
 
     capture = AudioCapture(samplerate=16000, blocksize=320)
     chunks = []

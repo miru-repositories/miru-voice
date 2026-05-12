@@ -8,7 +8,7 @@ import sys
 import numpy as np
 import sounddevice as sd
 
-from dictado.audio_capture import AudioCapture
+from miru_voice.audio_capture import AudioCapture
 
 
 async def main():

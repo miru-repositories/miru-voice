@@ -1,4 +1,4 @@
-# Dictado — Windows
+# Miru Voice — Windows
 
 Local push-to-talk dictation. Hold a hotkey, speak, release. Text gets pasted into the focused app. 100% on-device — audio never leaves your PC.
 
@@ -76,7 +76,7 @@ Cached in `%USERPROFILE%\.cache\huggingface`.
 ### From PowerShell
 
 ```powershell
-.\.venv\Scripts\python.exe -m dictado.main
+.\.venv\Scripts\python.exe -m miru_voice.main
 ```
 
 You'll see:
@@ -92,11 +92,11 @@ Generate a shortcut once:
 .\scripts\install_shortcut.ps1
 ```
 
-This creates `Dictado.lnk` on your Desktop and in the Start Menu. To pin to taskbar on Windows 11:
+This creates `Miru Voice.lnk` on your Desktop and in the Start Menu. To pin to taskbar on Windows 11:
 
 1. Double-click the Desktop shortcut → app launches minimized
 2. Right-click the taskbar icon → **Pin to taskbar**
-3. From now on, clicking the taskbar pin launches Dictado
+3. From now on, clicking the taskbar pin launches Miru Voice
 
 ### What to expect
 
@@ -116,11 +116,11 @@ This creates `Dictado.lnk` on your Desktop and in the Start Menu. To pin to task
 
 ## Modify it
 
-All defaults live in `src/dictado/main.py` and the four submodules. No config file yet (that's Phase 4 work). Edit the source and re-run.
+All defaults live in `src/miru_voice/main.py` and the four submodules. No config file yet (that's Phase 4 work). Edit the source and re-run.
 
 ### Change the hotkey
 
-In `src/dictado/main.py`, find:
+In `src/miru_voice/main.py`, find:
 
 ```python
 listener = HotkeyListener(
@@ -139,7 +139,7 @@ Replace `keys=...` with one of:
 | Right Ctrl + Space | `keys=["ctrl_r", "space"]` |
 | Ctrl + Shift + Space | `keys=["ctrl_l", "shift_l", "space"]` |
 
-Available single keys: `alt_l`, `alt_r`, `alt_gr`, `ctrl_l`, `ctrl_r`, `shift_l`, `shift_r`, `space`, `caps_lock`, `f9`, `f10`, `f12`. Full list in `src/dictado/hotkey.py:_KEY_MAP`.
+Available single keys: `alt_l`, `alt_r`, `alt_gr`, `ctrl_l`, `ctrl_r`, `shift_l`, `shift_r`, `space`, `caps_lock`, `f9`, `f10`, `f12`. Full list in `src/miru_voice/hotkey.py:_KEY_MAP`.
 
 `mode` options:
 - `"hold"` — record while held (default, recommended)
@@ -147,7 +147,7 @@ Available single keys: `alt_l`, `alt_r`, `alt_gr`, `ctrl_l`, `ctrl_r`, `shift_l`
 
 ### Change the ASR model
 
-In `src/dictado/asr.py`, the default is `Systran/faster-whisper-large-v3` (multilingual, ~800 MB, best accuracy). Swap for:
+In `src/miru_voice/asr.py`, the default is `Systran/faster-whisper-large-v3` (multilingual, ~800 MB, best accuracy). Swap for:
 
 | Model | Size (int8) | Latency on RTX 3080 | Use case |
 |---|---|---|---|
@@ -176,7 +176,7 @@ Then pre-download:
 
 ### Force a language (skip auto-detect)
 
-Auto-detect adds ~50 ms and occasionally picks wrong on short utterances. Force a language in `src/dictado/main.py`:
+Auto-detect adds ~50 ms and occasionally picks wrong on short utterances. Force a language in `src/miru_voice/main.py`:
 
 ```python
 text = await asyncio.to_thread(self._asr.transcribe, audio, "es")  # or "en"
@@ -186,7 +186,7 @@ text = await asyncio.to_thread(self._asr.transcribe, audio, "es")  # or "en"
 
 ### Change paste behavior
 
-In `src/dictado/main.py`, the orchestrator does `self._injector = TextInjector()` which defaults to `mode="auto"` (paste, fallback to typing on error). To force one or the other:
+In `src/miru_voice/main.py`, the orchestrator does `self._injector = TextInjector()` which defaults to `mode="auto"` (paste, fallback to typing on error). To force one or the other:
 
 ```python
 self._injector = TextInjector(mode="paste")   # paste only — error if blocked
@@ -197,7 +197,7 @@ Also: `restore_clipboard=False` skips the clipboard restore (faster, but wipes w
 
 ### Change the silence threshold
 
-In `src/dictado/main.py`, `_transcribe_and_inject` skips recordings with RMS < 0.005. If your mic is quiet, lower it:
+In `src/miru_voice/main.py`, `_transcribe_and_inject` skips recordings with RMS < 0.005. If your mic is quiet, lower it:
 
 ```python
 if rms < 0.001:   # was 0.005
@@ -207,7 +207,7 @@ if rms < 0.001:   # was 0.005
 
 ### Where are the logs
 
-Right now, only console output (the window the app runs in). Phase 4 will add a rotating log file at `%APPDATA%\dictado\logs\dictado.log`.
+Right now, only console output (the window the app runs in). Phase 4 will add a rotating log file at `%APPDATA%\miru-voice\logs\miru-voice.log`.
 
 ---
 
@@ -223,9 +223,9 @@ Right now, only console output (the window the app runs in). Phase 4 will add a 
 
 **`PortAudioError -9984 Incompatible host API`** → Already handled by automatic fallback (commit `a06476d`). If it still happens, check the device's host API isn't fully broken.
 
-**App pastes English when you spoke Spanish** → Wrong model. Verify `src/dictado/asr.py` uses `Systran/faster-whisper-large-v3` (or any non-distil variant). `distil-whisper-large-v3` is English-only.
+**App pastes English when you spoke Spanish** → Wrong model. Verify `src/miru_voice/asr.py` uses `Systran/faster-whisper-large-v3` (or any non-distil variant). `distil-whisper-large-v3` is English-only.
 
-**Multiple dictado processes running** → Each click of the taskbar pin launches a new instance. Check Task Manager → kill duplicates. Singleton lock is Phase 2 work.
+**Multiple miru-voice processes running** → Each click of the taskbar pin launches a new instance. Check Task Manager → kill duplicates. Singleton lock is Phase 2 work.
 
 ---
 

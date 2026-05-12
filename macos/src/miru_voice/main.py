@@ -5,26 +5,25 @@ from collections import deque
 
 import numpy as np
 
-from dictado.asr import ASR
-from dictado.audio_capture import AudioCapture
-from dictado.hotkey import HotkeyEvent, HotkeyListener
-from dictado.injector import TextInjector
+from miru_voice.asr import ASR
+from miru_voice.audio_capture import AudioCapture
+from miru_voice.hotkey import HotkeyEvent, HotkeyListener
+from miru_voice.injector import TextInjector
 
-log = logging.getLogger("dictado")
+log = logging.getLogger("miru_voice")
 
 
 class App:
     def __init__(self) -> None:
         self._loop = asyncio.new_event_loop()
         self._capture = AudioCapture()
-        self._asr: ASR | None = None  # lazy load to defer model load until first use
+        self._asr: ASR | None = None  # lazy load
         self._injector = TextInjector()
         self._recording = False
         self._buffer: deque[np.ndarray] = deque()
         self._capture_task: asyncio.Task | None = None
 
     def _on_hotkey(self, event: HotkeyEvent) -> None:
-        # Called from pynput thread → bounce to event loop
         if event == HotkeyEvent.PRESS:
             self._loop.call_soon_threadsafe(self._start_recording)
         else:
@@ -77,11 +76,13 @@ class App:
             level=logging.INFO,
             format="%(asctime)s %(levelname)s %(message)s",
         )
-        listener = HotkeyListener(
-            keys=["ctrl_l", "space"], mode="hold", on_event=self._on_hotkey
-        )
+        # macOS default: Right Option (single key, no Spotlight conflict).
+        # Alternatives: "caps_lock", ["cmd_l", "space"] (conflicts with Spotlight
+        # if not remapped), ["ctrl_l", "space"] (conflicts with IME switcher if
+        # multiple input sources are enabled).
+        listener = HotkeyListener(keys="alt_r", mode="hold", on_event=self._on_hotkey)
         listener.start()
-        log.info("ready — hold Left Ctrl + Space to dictate. Ctrl+C to quit.")
+        log.info("ready — hold Right Option (⌥) to dictate. Ctrl+C to quit.")
         try:
             self._loop.run_forever()
         except KeyboardInterrupt:
